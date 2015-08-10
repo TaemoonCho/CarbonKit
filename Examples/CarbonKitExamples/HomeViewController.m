@@ -54,6 +54,7 @@
 		return viewController;
 	} else {
 		ViewControllerThree *viewController = [self.storyboard instantiateViewControllerWithIdentifier:@"ViewControllerThree"];
+		viewController.tabSwipeNavigation = tabSwipe;
 		return viewController;
 	}
 }

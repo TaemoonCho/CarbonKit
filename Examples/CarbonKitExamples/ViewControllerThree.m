@@ -16,6 +16,10 @@
     // Dispose of any resources that can be recreated.
 }
 
+- (IBAction)buttonTapped
+{
+    [self.tabSwipeNavigation setShowing:!self.tabSwipeNavigation.isShowing animated:YES];
+}
 /*
 #pragma mark - Navigation
 

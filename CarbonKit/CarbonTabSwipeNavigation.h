@@ -64,6 +64,9 @@
  */
 @property (nonatomic, assign) NSUInteger currentTabIndex;
 
+
+@property (nonatomic, assign, getter=isShowing) BOOL showing;
+
 /**
  *	This method will create TabSwipeNavigation
  *	@param viewController UIViewController : parent view controller
@@ -122,4 +125,5 @@
  */
 - (void)setExtraSpace:(CGFloat)extra;
 
+- (void)setShowing:(BOOL)showing animated:(BOOL)animated;
 @end

@@ -46,6 +46,8 @@
 	NSLayoutConstraint *indicatorLeftConst;
 	NSLayoutConstraint *indicatorWidthConst;
 	NSLayoutConstraint *indicatorHeightConst;
+	
+	UIView *shadowView;
 }
 
 @end
@@ -58,6 +60,7 @@
 				    delegate:(id)delegate {
 	
 	// init
+	_showing = YES;
 	self.delegate = delegate;
 	numberOfTabs = names.count;
 	rootViewController = viewController;
@@ -153,6 +156,7 @@
 	
 	// create scrollview
 	tabScrollView = [[UIScrollView alloc] init];
+	[tabScrollView setClipsToBounds:YES];
 	[self.view addSubview:tabScrollView];
 	
 	// create indicator
@@ -240,6 +244,7 @@
 	// set tint color
 	[self setTintColor:tintColor];
 	
+	[self.view setClipsToBounds:YES];
 	return self;
 }
 
@@ -300,6 +305,7 @@
 	[shadow.layer setShadowOpacity:.1f];
 	[shadow.layer setShadowRadius:.3f];
 	[shadow.layer setShadowOffset:CGSizeMake(0, .2)];
+	shadowView = shadow;
 	[self.view addSubview:shadow];
 }
 
@@ -641,4 +647,91 @@
 	previewsOffset = scrollView.contentOffset;
 }
 
+- (void)setShowing:(BOOL)showing
+{
+	[self setShowing:showing animated:NO];
+}
+
+- (void)setShowing:(BOOL)showing animated:(BOOL)animated
+{
+	if (_showing != showing) {
+		_showing = showing;
+		if (_showing) {
+			[self showWithAnimate:animated];
+		} else {
+			[self hideWithAnimate:animated];
+		}
+	}
+}
+
+- (void)hideWithAnimate:(BOOL)animated
+{
+	void (^animation)() = ^() {
+		CGRect originFrame = [segmentController frame];
+		[tabScrollView setFrame:CGRectMake(originFrame.origin.x, originFrame.origin.y, originFrame.size.width, 0)];
+		if (shadowView) {
+			[shadowView setAlpha:0];
+		}
+		[self updateConstraints];
+	};
+	if (animated) {
+		[self animate:animation];
+	} else {
+		animation();
+	}
+	
+}
+
+- (void)showWithAnimate:(BOOL)animated
+{
+	void (^animation)() = ^() {
+		CGRect originFrame = [segmentController frame];
+		[tabScrollView setFrame:CGRectMake(originFrame.origin.x, originFrame.origin.y, originFrame.size.width, 44)];
+		if (shadowView) {
+			[shadowView setAlpha:1];
+		}
+		[self updateConstraints];
+	};
+	if (animated) {
+		[self animate:animation];
+	} else {
+		animation();
+	}
+}
+
+
+- (void)animate:(void (^)(void))animation
+{
+	[UIView animateWithDuration:0.25 animations:animation completion:^(BOOL finished) {
+		
+	}];
+}
+
+- (void)updateConstraints
+{
+	[self.view removeConstraints:[self.view constraints]];
+	
+	UIView *parentView = self.view;
+	UIView *pageControllerView = pageController.view;
+	id<UILayoutSupport> rootTopLayoutGuide = rootViewController.topLayoutGuide;
+	id<UILayoutSupport> rootBottomLayoutGuide = rootViewController.bottomLayoutGuide;
+	NSDictionary *viewsDictionary = NSDictionaryOfVariableBindings(rootTopLayoutGuide, rootBottomLayoutGuide, parentView, tabScrollView, pageControllerView);
+	
+	NSDictionary *metricsDictionary = nil;
+	
+	if (_showing) {
+		metricsDictionary = @{
+							  @"tabScrollViewHeight" : @44
+							  };
+	} else {
+		metricsDictionary = @{
+							  @"tabScrollViewHeight" : @0
+							  };
+	}
+	[self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[tabScrollView(==tabScrollViewHeight)][pageControllerView]|" options:0 metrics:metricsDictionary views:viewsDictionary]];
+	[self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[tabScrollView]|" options:0 metrics:metricsDictionary views:viewsDictionary]];
+	[self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[pageControllerView]|" options:0 metrics:metricsDictionary views:viewsDictionary]];
+	
+	[self.view layoutIfNeeded];
+}
 @end
