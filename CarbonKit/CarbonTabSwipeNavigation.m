@@ -258,7 +258,7 @@
 	
 	if (useSwitcher) {
 		_switcher = [[DVSwitch alloc] initWithStringsArray:names];
-		_switcher.frame = CGRectMake(10, 0, self.view.frame.size.width - 20, 40);
+		_switcher.frame = CGRectMake(10, 1, self.view.frame.size.width - 20, 40);
 		_switcher.sliderColor = [UIColor colorWithRed:42/255.f green:55/255.f blue:89/255.f alpha:1];
 		_switcher.labelTextColorInsideSlider = [UIColor whiteColor];
 		_switcher.labelTextColorOutsideSlider = [UIColor colorWithRed:134/255.f green:134/255.f blue:134/255.f alpha:1];
