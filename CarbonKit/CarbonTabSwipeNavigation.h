@@ -67,6 +67,8 @@
 
 @property (nonatomic, assign, getter=isShowing) BOOL showing;
 
+
+@property (nonatomic, assign, getter=hasSwitcher) BOOL useSwitcher;
 /**
  *	This method will create TabSwipeNavigation
  *	@param viewController UIViewController : parent view controller
@@ -75,6 +77,7 @@
  *	@param delegate id : object where CarbonTabSwipeNavigation will delegate
  */
 - (instancetype)createWithRootViewController:(UIViewController *)viewController tabNames:(NSArray *)names tintColor:(UIColor *)tintColor delegate:(id)delegate;
+- (instancetype)createWithRootViewController:(UIViewController *)viewController tabNames:(NSArray *)names tintColor:(UIColor *)tintColor switcher:(BOOL)useSwitcher delegate:(id)delegate;
 
 /**
  *  Navigation tranlucent

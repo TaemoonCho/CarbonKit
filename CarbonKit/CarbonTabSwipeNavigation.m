@@ -22,6 +22,7 @@
 //
 
 #import "CarbonTabSwipeNavigation.h"
+#import "DVSwitch.h"
 
 @interface CarbonTabSwipeNavigation() <UIPageViewControllerDelegate, UIPageViewControllerDataSource, UIScrollViewDelegate> {
 	
@@ -48,6 +49,7 @@
 	NSLayoutConstraint *indicatorHeightConst;
 	
 	UIView *shadowView;
+	DVSwitch *_switcher;
 }
 
 @end
@@ -58,7 +60,11 @@
 				    tabNames:(NSArray *)names
 				   tintColor:(UIColor *)tintColor
 				    delegate:(id)delegate {
-	
+	return [self createWithRootViewController:viewController tabNames:names tintColor:tintColor switcher:NO delegate:delegate];
+}
+
+- (instancetype)createWithRootViewController:(UIViewController *)viewController tabNames:(NSArray *)names tintColor:(UIColor *)tintColor switcher:(BOOL)useSwitcher delegate:(id)delegate
+{
 	// init
 	_showing = YES;
 	self.delegate = delegate;
@@ -69,8 +75,8 @@
 	// create page controller
 	pageController = [UIPageViewController alloc];
 	pageController = [pageController initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll
-					   navigationOrientation:UIPageViewControllerNavigationOrientationHorizontal
-							 options:nil];
+									   navigationOrientation:UIPageViewControllerNavigationOrientationHorizontal
+													 options:nil];
 	pageController.delegate = self;
 	pageController.dataSource = self;
 	
@@ -91,68 +97,70 @@
 	[rootViewController.view addSubview:self.view];
 	[self didMoveToParentViewController:rootViewController];
 	
-	// create segment control
-	segmentController = [[UISegmentedControl alloc] initWithItems:names];
-	CGRect segRect = segmentController.frame;
-	segRect.size.height = 44;
-	segmentController.frame = segRect;
-	
-	UIColor *normalTextColor = [self.view.tintColor colorWithAlphaComponent:0.8];
-	
-	[segmentController setTitleTextAttributes:@{NSForegroundColorAttributeName:normalTextColor,
-						    NSFontAttributeName:[UIFont boldSystemFontOfSize:14]}
-					 forState:UIControlStateNormal];
-	[segmentController setTitleTextAttributes:@{NSForegroundColorAttributeName:self.view.tintColor,
-						    NSFontAttributeName:[UIFont boldSystemFontOfSize:14]}
-					 forState:UIControlStateSelected];
-	
-	// segment controller action
-	[segmentController addTarget:self action:@selector(segmentAction:) forControlEvents:UIControlEventValueChanged];
-	
-	// max tabWidth
-	CGFloat maxTabWidth = 0;
-	
-	// get tabs width
-	NSUInteger i = 0;
 	CGFloat segmentedWidth = 0;
-	for (UIView *tabView in [segmentController subviews]) {
-		for (UIView *label in tabView.subviews) {
-			if ([label isKindOfClass:[UILabel class]]) {
-				CGFloat tabWidth = roundf([label sizeThatFits:CGSizeMake(FLT_MAX, 0)].width + extraSpace * 2);
-				[segmentController setWidth:tabWidth forSegmentAtIndex:i];
+		// create segment control
+		segmentController = [[UISegmentedControl alloc] initWithItems:names];
+		CGRect segRect = segmentController.frame;
+		segRect.size.height = 44;
+		segmentController.frame = segRect;
+		
+		UIColor *normalTextColor = [self.view.tintColor colorWithAlphaComponent:0.8];
+		
+		[segmentController setTitleTextAttributes:@{NSForegroundColorAttributeName:normalTextColor,
+													NSFontAttributeName:[UIFont boldSystemFontOfSize:14]}
+										 forState:UIControlStateNormal];
+		[segmentController setTitleTextAttributes:@{NSForegroundColorAttributeName:self.view.tintColor,
+													NSFontAttributeName:[UIFont boldSystemFontOfSize:14]}
+										 forState:UIControlStateSelected];
+		
+		// segment controller action
+		[segmentController addTarget:self action:@selector(segmentAction:) forControlEvents:UIControlEventValueChanged];
+		
+		// max tabWidth
+		CGFloat maxTabWidth = 0;
+		
+		// get tabs width
+		NSUInteger i = 0;
+		for (UIView *tabView in [segmentController subviews]) {
+			for (UIView *label in tabView.subviews) {
+				if ([label isKindOfClass:[UILabel class]]) {
+					CGFloat tabWidth = roundf([label sizeThatFits:CGSizeMake(FLT_MAX, 0)].width + extraSpace * 2);
+					[segmentController setWidth:tabWidth forSegmentAtIndex:i];
+					
+					segmentedWidth += tabWidth;
+					
+					// get max tab width
+					maxTabWidth = tabWidth > maxTabWidth ? tabWidth : maxTabWidth;
+				}
+			}
+			[tabs addObject:tabView];
+			i++;
+		}
+		
+		if (segmentedWidth < self.view.frame.size.width) {
+			if (self.view.frame.size.width / (float)numberOfTabs < maxTabWidth) {
 				
-				segmentedWidth += tabWidth;
+				for (int i = 0; i < numberOfTabs; i++) {
+					[segmentController setWidth:maxTabWidth forSegmentAtIndex:i];
+				}
 				
-				// get max tab width
-				maxTabWidth = tabWidth > maxTabWidth ? tabWidth : maxTabWidth;
+				segmentedWidth = maxTabWidth * numberOfTabs;
+			} else {
+				maxTabWidth = roundf(self.view.frame.size.width/(float)numberOfTabs);
+				
+				for (int i = 0; i < numberOfTabs; i++) {
+					[segmentController setWidth:maxTabWidth forSegmentAtIndex:i];
+				}
+				
+				segmentedWidth = maxTabWidth * numberOfTabs;
 			}
 		}
-		[tabs addObject:tabView];
-		i++;
-	}
+		
+		CGRect segmentRect = segmentController.frame;
+		segmentRect.size.width = segmentedWidth;
+		segmentController.frame = segmentRect;
+
 	
-	if (segmentedWidth < self.view.frame.size.width) {
-		if (self.view.frame.size.width / (float)numberOfTabs < maxTabWidth) {
-			
-			for (int i = 0; i < numberOfTabs; i++) {
-				[segmentController setWidth:maxTabWidth forSegmentAtIndex:i];
-			}
-			
-			segmentedWidth = maxTabWidth * numberOfTabs;
-		} else {
-			maxTabWidth = roundf(self.view.frame.size.width/(float)numberOfTabs);
-			
-			for (int i = 0; i < numberOfTabs; i++) {
-				[segmentController setWidth:maxTabWidth forSegmentAtIndex:i];
-			}
-			
-			segmentedWidth = maxTabWidth * numberOfTabs;
-		}
-	}
-	
-	CGRect segmentRect = segmentController.frame;
-	segmentRect.size.width = segmentedWidth;
-	segmentController.frame = segmentRect;
 	
 	// create scrollview
 	tabScrollView = [[UIScrollView alloc] init];
@@ -160,18 +168,20 @@
 	[self.view addSubview:tabScrollView];
 	
 	// create indicator
-	indicator = [[UIImageView alloc] init];
-	indicator.backgroundColor = self.view.tintColor;
-	[segmentController addSubview:indicator];
-	
-	[segmentController setTintColor:[UIColor clearColor]];
-	[segmentController setDividerImage:[UIImage new] forLeftSegmentState:UIControlStateNormal rightSegmentState:UIControlStateNormal barMetrics:UIBarMetricsDefault];
-	
-	[tabScrollView addSubview:segmentController];
-	[tabScrollView setContentSize:CGSizeMake(segmentedWidth, 44)];
-	[tabScrollView setShowsHorizontalScrollIndicator:NO];
-	[tabScrollView setShowsVerticalScrollIndicator:NO];
-	[tabScrollView setTranslatesAutoresizingMaskIntoConstraints:NO];
+	if (segmentController) {
+		indicator = [[UIImageView alloc] init];
+		indicator.backgroundColor = self.view.tintColor;
+		[segmentController addSubview:indicator];
+		[segmentController setTintColor:[UIColor clearColor]];
+		[segmentController setDividerImage:[UIImage new] forLeftSegmentState:UIControlStateNormal rightSegmentState:UIControlStateNormal barMetrics:UIBarMetricsDefault];
+		[tabScrollView addSubview:segmentController];
+		[tabScrollView setContentSize:CGSizeMake(segmentedWidth, 44)];
+		[tabScrollView setShowsHorizontalScrollIndicator:NO];
+		[tabScrollView setShowsVerticalScrollIndicator:NO];
+		[tabScrollView setTranslatesAutoresizingMaskIntoConstraints:NO];
+	} else {
+		[tabScrollView addSubview:_switcher];
+	}
 	
 	[pageController.view setTranslatesAutoresizingMaskIntoConstraints: NO];
 	[self.view setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -180,7 +190,7 @@
 	UIView *parentView = self.view;
 	UIView *pageControllerView = pageController.view;
 	id<UILayoutSupport> rootTopLayoutGuide = rootViewController.topLayoutGuide;
-    id<UILayoutSupport> rootBottomLayoutGuide = rootViewController.bottomLayoutGuide;
+	id<UILayoutSupport> rootBottomLayoutGuide = rootViewController.bottomLayoutGuide;
 	NSDictionary *viewsDictionary = NSDictionaryOfVariableBindings(rootTopLayoutGuide, rootBottomLayoutGuide, parentView, tabScrollView, pageControllerView);
 	NSDictionary *metricsDictionary = @{
 										@"tabScrollViewHeight" : @44
@@ -189,18 +199,18 @@
 	[self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[tabScrollView(==tabScrollViewHeight)][pageControllerView]|" options:0 metrics:metricsDictionary views:viewsDictionary]];
 	[self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[tabScrollView]|" options:0 metrics:metricsDictionary views:viewsDictionary]];
 	[self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[pageControllerView]|" options:0 metrics:metricsDictionary views:viewsDictionary]];
-
+	
 	[rootViewController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[rootTopLayoutGuide][parentView][rootBottomLayoutGuide]" options:0 metrics:metricsDictionary views:viewsDictionary]];
 	[rootViewController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[parentView]|" options:0 metrics:metricsDictionary views:viewsDictionary]];
 	
 	[indicator setTranslatesAutoresizingMaskIntoConstraints:NO];
 	[segmentController addConstraint:[NSLayoutConstraint constraintWithItem:indicator
-								      attribute:NSLayoutAttributeBottom
-								      relatedBy:NSLayoutRelationEqual
-									 toItem:indicator.superview
-								      attribute:NSLayoutAttributeBottom
-								     multiplier:1.0
-								       constant:1]];
+																  attribute:NSLayoutAttributeBottom
+																  relatedBy:NSLayoutRelationEqual
+																	 toItem:indicator.superview
+																  attribute:NSLayoutAttributeBottom
+																 multiplier:1.0
+																   constant:1]];
 	
 	indicatorHeightConst = [NSLayoutConstraint constraintWithItem:indicator
 														attribute:NSLayoutAttributeHeight
@@ -245,6 +255,24 @@
 	[self setTintColor:tintColor];
 	
 	[self.view setClipsToBounds:YES];
+	
+	if (useSwitcher) {
+		_switcher = [[DVSwitch alloc] initWithStringsArray:names];
+		_switcher.frame = CGRectMake(10, 0, self.view.frame.size.width - 20, 40);
+		_switcher.sliderColor = [UIColor colorWithRed:42/255.f green:55/255.f blue:89/255.f alpha:1];
+		_switcher.labelTextColorInsideSlider = [UIColor whiteColor];
+		_switcher.labelTextColorOutsideSlider = [UIColor colorWithRed:134/255.f green:134/255.f blue:134/255.f alpha:1];
+		_switcher.backgroundColor = [UIColor colorWithRed:240/255.f green:240/255.f blue:240/255.f alpha:1];
+		_switcher.cornerRadius = 20;
+		_switcher.sliderOffset = 4.0;
+		_switcher.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:16];
+		
+		__block CarbonTabSwipeNavigation *navi = self;
+		[_switcher setPressedHandler:^(NSUInteger index) {
+			[navi setCurrentTabIndex:index];
+		}];
+		[tabScrollView addSubview:_switcher];
+	}
 	return self;
 }
 
