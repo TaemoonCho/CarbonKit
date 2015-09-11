@@ -83,7 +83,11 @@
 	// delegate scrollview
 	for (UIView *v in pageController.view.subviews) {
 		if ([v isKindOfClass:[UIScrollView class]]) {
-			((UIScrollView *)v).delegate = self;
+			if (useSwitcher) {
+				[(UIScrollView *)v setScrollEnabled:NO];
+			} else {
+				((UIScrollView *)v).delegate = self;
+			}
 		}
 	}
 	
