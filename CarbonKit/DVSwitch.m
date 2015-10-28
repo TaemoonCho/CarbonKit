@@ -237,9 +237,8 @@
 	self.sliderView.layer.cornerRadius = self.sliderView.frame.size.height / 2;
 	
     for (int i = 0; i < [self.labels count]; i++) {
-        
         UILabel *label = self.labels[i];
-        label.frame = CGRectMake(i * sliderWidth, 0, sliderWidth, self.frame.size.height);
+        label.frame = CGRectMake(i * sliderWidth, 1, sliderWidth, self.frame.size.height);
         if (self.font) {
             label.font = self.font;
         }
@@ -247,9 +246,10 @@
     }
     
     for (int j = 0; j < [self.onTopLabels count]; j++) {
-        
         UILabel *label = self.onTopLabels[j];
-        label.frame = CGRectMake([self.sliderView convertPoint:CGPointMake(j * sliderWidth, 0) fromView:self.backgroundView].x, - self.sliderOffset, sliderWidth, self.frame.size.height);
+		CGRect frame = CGRectMake([self.sliderView convertPoint:CGPointMake(j * sliderWidth, 0) fromView:self.backgroundView].x, - self.sliderOffset, sliderWidth, self.frame.size.height);
+		frame.origin.y = frame.origin.y + 1;
+		label.frame = frame;
         if (self.font) {
             label.font = self.font;
         }
