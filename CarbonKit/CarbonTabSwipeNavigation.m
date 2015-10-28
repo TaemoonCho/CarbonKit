@@ -262,14 +262,14 @@
 	
 	if (useSwitcher) {
 		_switcher = [[DVSwitch alloc] initWithStringsArray:names];
-		_switcher.frame = CGRectMake(10, 1, self.view.frame.size.width - 20, 40);
+		_switcher.frame = CGRectMake(8.5, 5, self.view.frame.size.width - 17, 27.5f);
 		_switcher.sliderColor = [UIColor colorWithRed:42/255.f green:55/255.f blue:89/255.f alpha:1];
 		_switcher.labelTextColorInsideSlider = [UIColor whiteColor];
-		_switcher.labelTextColorOutsideSlider = [UIColor colorWithRed:134/255.f green:134/255.f blue:134/255.f alpha:1];
-		_switcher.backgroundColor = [UIColor colorWithRed:240/255.f green:240/255.f blue:240/255.f alpha:1];
-		_switcher.cornerRadius = 20;
-		_switcher.sliderOffset = 4.0;
-		_switcher.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:16];
+		_switcher.labelTextColorOutsideSlider = [UIColor colorWithRed:150/255.f green:155/255.f blue:157/255.f alpha:1];
+		_switcher.backgroundColor = [UIColor colorWithRed:237/255.f green:238/255.f blue:239/255.f alpha:1];
+		_switcher.cornerRadius = 13.5f;
+		_switcher.sliderOffset = 2.5f;
+		_switcher.font = [UIFont fontWithName:@"AquaGrotesque" size:10.0];
 		
 		__block CarbonTabSwipeNavigation *navi = self;
 		[_switcher setPressedHandler:^(NSUInteger index) {
